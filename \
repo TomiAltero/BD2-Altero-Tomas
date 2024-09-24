@@ -1,0 +1,41 @@
+USE sakila;
+
+
+CREATE USER 'analyst_user'@'localhost' IDENTIFIED BY 'securepass';
+CREATE USER 'analyst_user'@'%' IDENTIFIED BY 'securepass';
+
+
+GRANT SELECT, UPDATE, DELETE ON sakila.* TO 'analyst_user'@'localhost';
+SHOW GRANTS FOR 'analyst_user'@'localhost';
+
+
+-- mysql -u analyst_user -p
+CREATE TABLE region (
+  region_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  region_name VARCHAR(50) NOT NULL,
+  country_id SMALLINT UNSIGNED NOT NULL,
+  last_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (region_id),
+  KEY idx_fk_country_id (country_id),
+  CONSTRAINT `fk_region_country` FOREIGN KEY (country_id) REFERENCES country (country_id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- Intentar actualizar el título de una película:
+
+SELECT title FROM film WHERE film_id = 371;
+UPDATE film SET title='El Retorno del Viento' WHERE film_id = 371;
+
+
+-- Con un usuario administrador o root, revocar el permiso de UPDATE. 
+
+REVOKE UPDATE ON sakila.* FROM 'analyst_user'@'localhost';
+FLUSH PRIVILEGES;
+
+-- Iniciar sesión nuevamente con analyst_user y tratar de hacer la actualización del paso 4.
+
+UPDATE film SET title='El Viento y la Marea' WHERE film_id = 371;
+
+-- Resultado:
+-- ERROR 1142 (42000): UPDATE command denied to user 'analyst_user'@'localhost' for table 'film'
+
